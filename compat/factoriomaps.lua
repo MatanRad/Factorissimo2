@@ -3,7 +3,7 @@ Compat = Compat or {}
 local function cleanup_entities_for_factoriomaps()
 	print("Starting factoriomaps-factorissimo integration script")
 
-	for surface, factoryList in pairs(global.surface_factories) do
+	for surface, factoryList in pairs(storage.surface_factories) do
 
 		remote.call("factoriomaps", "surface_set_hidden", surface, true)
 
@@ -17,7 +17,7 @@ local function cleanup_entities_for_factoriomaps()
 
 			if factory.built then
 				for _, id in pairs(factory.outside_overlay_displays) do
-					rendering.destroy(id)
+					id.destroy()
 				end
 
 				remote.call("factoriomaps", "link_renderbox_area", {

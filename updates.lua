@@ -1,11 +1,11 @@
 Updates = {}
 
 Updates.init = function()
-	global.update_version = 12
+	storage.update_version = 12
 end
 
 local function fix_common_issues()
-	for _, factory in pairs(global.factories) do
+	for _, factory in pairs(storage.factories) do
 		-- Fix issues when forces are deleted
 		if not factory.force.valid then
 			factory.force = game.forces["player"]
@@ -15,13 +15,13 @@ end
 
 Updates.run = function()
 	fix_common_issues()
-	if global.update_version < 11 then
+	if storage.update_version < 11 then
 		error("This save is too old to be reloaded in this version of Factorissimo2. "
 			.. "To run this save, you will need to load and resave this map with Factorissimo2 version 2.4.5 or 2.4.6.")
 	end
-	if global.update_version < 12 then
+	if storage.update_version < 12 then
 		-- Due to an update script bug, this update may already have been applied
-		if #global.factories > 0 and global.factories[1].layout.overlays.nw then
+		if #storage.factories > 0 and storage.factories[1].layout.overlays.nw then
 			-- Layout has not been updated yet, so this update has not been applied
 
 			-- Begin overlay display rework
@@ -30,7 +30,7 @@ Updates.run = function()
 					e.destroy()
 				end
 			end
-			for _, factory in pairs(global.factories) do
+			for _, factory in pairs(storage.factories) do
 				for _, entity in pairs(factory.outside_overlay_displays) do
 					if entity.valid then entity.destroy() end
 				end
@@ -56,11 +56,11 @@ Updates.run = function()
 			-- End overlay display rework
 
 			-- Begin port marker rework
-			for _, factory in pairs(global.factories) do
+			for _, factory in pairs(storage.factories) do
 				factory.outside_port_markers = {}
 			end
 			-- End port marker rework
 		end
 	end
-	global.update_version = 12
+	storage.update_version = 12
 end

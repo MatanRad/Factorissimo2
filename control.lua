@@ -63,23 +63,23 @@ factory = {
 
 local function init_globals()
 	-- List of all factories
-	global.factories = global.factories or {}
+	storage.factories = storage.factories or {}
 	-- Map: Save name -> Factory it is currently saving
-	global.saved_factories = global.saved_factories or {}
+	storage.saved_factories = storage.saved_factories or {}
 	-- Map: Player or robot -> Save name to give him on the next relevant event
-	global.pending_saves = global.pending_saves or {}
+	storage.pending_saves = storage.pending_saves or {}
 	-- Map: Entity unit number -> Factory it is a part of
-	global.factories_by_entity = global.factories_by_entity or {}
+	storage.factories_by_entity = storage.factories_by_entity or {}
 	-- Map: Surface name -> list of factories on it
-	global.surface_factories = global.surface_factories or {}
+	storage.surface_factories = storage.surface_factories or {}
 	-- Map: Surface name -> number of used factory spots on it
-	global.surface_factory_counters = global.surface_factory_counters or {}
+	storage.surface_factory_counters = storage.surface_factory_counters or {}
 	-- Scalar
-	global.next_factory_surface = global.next_factory_surface or 0
+	storage.next_factory_surface = storage.next_factory_surface or 0
 	-- Map: Player index -> Last teleport time
-	global.last_player_teleport = global.last_player_teleport or {}
+	storage.last_player_teleport = storage.last_player_teleport or {}
 	-- Map: Player index -> Whether preview is activated
-	global.player_preview_active = global.player_preview_active or {}
+	storage.player_preview_active = storage.player_preview_active or {}
 end
 
 local prepare_gui = 0  -- Function stub
@@ -111,7 +111,7 @@ script.on_configuration_changed(function(config_changed_data)
 	init_globals()
 	Updates.run()
 	init_gui()
-	for surface_name, _ in pairs(global.surface_factories or {}) do
+	for surface_name, _ in pairs(storage.surface_factories or {}) do
 		if remote.interfaces["RSO"] then -- RSO compatibility
 			pcall(remote.call, "RSO", "ignoreSurface", surface_name)
 		end
@@ -121,16 +121,16 @@ end)
 -- DATA MANAGEMENT --
 
 local function set_entity_to_factory(entity, factory)
-	global.factories_by_entity[entity.unit_number] = factory
+	storage.factories_by_entity[entity.unit_number] = factory
 end
 
 local function get_factory_by_entity(entity)
 	if entity == nil then return nil end
-	return global.factories_by_entity[entity.unit_number]
+	return storage.factories_by_entity[entity.unit_number]
 end
 
 local function get_factory_by_building(entity)
-	local factory = global.factories_by_entity[entity.unit_number]
+	local factory = storage.factories_by_entity[entity.unit_number]
 	if factory == nil then
 		game.print("ERROR: Unbound factory building: " .. entity.name .. "@" .. entity.surface.name .. "(" .. entity.position.x .. ", " .. entity.position.y .. ")")
 	end
@@ -146,7 +146,7 @@ local function find_factory_by_building(surface, area)
 end
 
 local function find_surrounding_factory(surface, position)
-	local factories = global.surface_factories[surface.name]
+	local factories = storage.surface_factories[surface.name]
 	if factories == nil then return nil end
 	local x = math.floor(0.5+position.x/(16*32))
 	local y = math.floor(0.5+position.y/(16*32))
@@ -254,7 +254,7 @@ local function update_power_settings(factory)
 end
 -- For update 11
 function update_all_power_settings()
-	for _, factory in pairs(global.factories) do
+	for _, factory in pairs(storage.factories) do
 		update_power_settings(factory)
 	end
 end
@@ -407,17 +407,30 @@ end
 
 function update_overlay(factory)
 	for _, id in pairs(factory.outside_overlay_displays) do
-		rendering.destroy(id)
+		-- rendering.destroy(id)
+		id.destroy()
 	end
 	factory.outside_overlay_displays = {}
 	if factory.built and factory.inside_overlay_controller and factory.inside_overlay_controller.valid then
-		local params = factory.inside_overlay_controller.get_or_create_control_behavior().parameters
+		local behaviour = factory.inside_overlay_controller.get_or_create_control_behavior()
+		-- iterate over behaviour.sections (its size is behaviour.sections_count)
 		local nonempty_params = {}
-		for _, param in pairs(params) do
-			if param and param.signal and param.signal.name then
-				table.insert(nonempty_params, param)
+		for i = 1, behaviour.sections_count do
+			local sect = behaviour.sections[i]
+			for j = 1, sect.filters_count do
+				local filter = sect.filters[j]
+				if filter and filter.value and filter.value and filter.value.name then
+					table.insert(nonempty_params, filter)
+				end
 			end
 		end
+
+		-- local params = factory.inside_overlay_controller.get_or_create_control_behavior().parameters
+		-- for _, param in pairs(params) do
+		-- 	if param and param.signal and param.signal.name then
+		-- 		table.insert(nonempty_params, param)
+		-- 	end
+		-- end
 		local sprite_positions = get_nice_overlay_arrangement(
 			factory.layout.overlays.outside_w,
 			factory.layout.overlays.outside_h,
@@ -426,7 +439,7 @@ function update_overlay(factory)
 		local i = 0
 		for _, param in pairs(nonempty_params) do
 			i = i + 1
-			draw_overlay_sprite(param.signal, factory.building,
+			draw_overlay_sprite(param.value, factory.building,
 				{
 					sprite_positions[i].x + factory.layout.overlays.outside_x,
 					sprite_positions[i].y + factory.layout.overlays.outside_y,
@@ -447,12 +460,12 @@ end
 
 
 local function create_factory_position()
-	global.next_factory_surface = global.next_factory_surface + 1
+	storage.next_factory_surface = storage.next_factory_surface + 1
 	local max_surface_id = settings.global["Factorissimo2-max-surfaces"].value
-	if (max_surface_id > 0 and global.next_factory_surface > max_surface_id) then
-		global.next_factory_surface = 1
+	if (max_surface_id > 0 and storage.next_factory_surface > max_surface_id) then
+		storage.next_factory_surface = 1
 	end
-	local surface_name = "Factory floor " .. global.next_factory_surface
+	local surface_name = "Factory floor " .. storage.next_factory_surface
 	local surface = game.surfaces[surface_name]
 	if surface == nil then
 		if #(game.surfaces) < 256 then
@@ -463,7 +476,7 @@ local function create_factory_position()
 				pcall(remote.call, "RSO", "ignoreSurface", surface_name)
 			end
 		else
-			global.next_factory_surface = 1
+			storage.next_factory_surface = 1
 			surface_name = "Factory floor 1"
 			surface = game.surfaces[surface_name]
 			if surface == nil then
@@ -471,8 +484,8 @@ local function create_factory_position()
 			end
 		end
 	end
-	local n = global.surface_factory_counters[surface_name] or 0
-	global.surface_factory_counters[surface_name] = n+1
+	local n = storage.surface_factory_counters[surface_name] or 0
+	storage.surface_factory_counters[surface_name] = n+1
 	local cx = 16*(n % 8)
 	local cy = 16*math.floor(n / 8)
 
@@ -502,10 +515,10 @@ local function create_factory_position()
 	factory.stored_pollution = 0
 	factory.upgrades = {}
 
-	global.surface_factories[surface_name] = global.surface_factories[surface_name] or {}
-	global.surface_factories[surface_name][n+1] = factory
-	local fn = #(global.factories)+1
-	global.factories[fn] = factory
+	storage.surface_factories[surface_name] = storage.surface_factories[surface_name] or {}
+	storage.surface_factories[surface_name][n+1] = factory
+	local fn = #(storage.factories)+1
+	storage.factories[fn] = factory
 	factory.id = fn
 
 	return factory
@@ -708,9 +721,9 @@ end
 
 local function save_factory(factory)
 	for _,sf in pairs(SAVE_ITEMS[factory.layout.name] or {}) do
-		if global.saved_factories[sf] then
+		if storage.saved_factories[sf] then
 		else
-			global.saved_factories[sf] = factory
+			storage.saved_factories[sf] = factory
 			return sf
 		end
 	end
@@ -719,11 +732,11 @@ local function save_factory(factory)
 end
 
 local function is_invalid_save_slot(name)
-	return SAVE_NAMES[name] and not global.saved_factories[name]
+	return SAVE_NAMES[name] and not storage.saved_factories[name]
 end
 
 local function init_factory_requester_chest(entity)
-	local saved_factories = global.saved_factories
+	local saved_factories = storage.saved_factories
 	local i = 0
 	for sf,_ in pairs(saved_factories) do
 		i = i+1
@@ -739,9 +752,9 @@ commands.add_command("give-lost-factory-buildings", {"command-help-message.give-
 	local player = game.players[event.player_index]
 	if not (player and player.connected and player.admin) then return end
 	if event.parameter == "destroyed" then
-		for _,factory in pairs(global.factories) do
+		for _,factory in pairs(storage.factories) do
 			local saved_or_built = factory.built
-			for _,saved_factory in pairs(global.saved_factories) do
+			for _,saved_factory in pairs(storage.saved_factories) do
 				if saved_factory.id == factory.id then
 					saved_or_built = true
 					break
@@ -755,7 +768,7 @@ commands.add_command("give-lost-factory-buildings", {"command-help-message.give-
 	local main_inventory =
 		player.get_inventory(defines.inventory.player_main or defines.inventory.character_main)
 		or player.get_inventory(defines.inventory.god_main)
-	for save_name,_ in pairs(global.saved_factories) do
+	for save_name,_ in pairs(storage.saved_factories) do
 		if main_inventory.get_item_count(save_name) == 0 and not (player.cursor_stack and player.cursor_stack.valid_for_read and player.cursor_stack.name == save_name) then
 			player.insert{name = save_name, count = 1}
 		end
@@ -825,11 +838,11 @@ script.on_event({defines.events.on_built_entity, defines.events.on_robot_built_e
 			entity.surface.create_entity{name=entity.name .. "-i", position=entity.position, force=entity.force}
 			entity.destroy()
 		end
-	elseif global.saved_factories[entity.name] then
+	elseif storage.saved_factories[entity.name] then
 		-- This is a saved factory, we need to unpack it
-		local factory = global.saved_factories[entity.name]
+		local factory = storage.saved_factories[entity.name]
 		if can_place_factory_here(factory.layout.tier, entity.surface, entity.position) then
-			global.saved_factories[entity.name] = nil
+			storage.saved_factories[entity.name] = nil
 			local newbuilding = entity.surface.create_entity{name=factory.layout.name, position=entity.position, force=factory.force}
 			newbuilding.last_user = entity.last_user
 			create_factory_exterior(factory, newbuilding)
@@ -909,11 +922,11 @@ end)
 -- Factories also need to start working again once they are unmarked
 script.on_event(defines.events.on_cancelled_deconstruction, function(event)
 	local entity = event.entity
-	if global.saved_factories[entity.name] then
+	if storage.saved_factories[entity.name] then
 		-- Rebuild factory from save
-		local factory = global.saved_factories[entity.name]
+		local factory = storage.saved_factories[entity.name]
 		if can_place_factory_here(factory.layout.tier, entity.surface, entity.position) then
-			global.saved_factories[entity.name] = nil
+			storage.saved_factories[entity.name] = nil
 			local newbuilding = entity.surface.create_entity{name=factory.layout.name, position=entity.position, force=factory.force}
 			create_factory_exterior(factory, newbuilding)
 			entity.destroy()
@@ -1000,7 +1013,7 @@ local function get_camera_frame(player)
 	local frameflow = mod_gui.get_frame_flow(player)
 	local camera_frame = frameflow.factory_camera_frame
 	if not camera_frame then
-		camera_frame = frameflow.add{type = "frame", name = "factory_camera_frame", style = "captionless_frame"}
+		camera_frame = frameflow.add{type = "frame", name = "factory_camera_frame", style = "frame"}
 		camera_frame.visible = false
 	end
 	return camera_frame
@@ -1051,11 +1064,11 @@ local function unset_camera(player)
 end
 
 local function update_camera(player)
-	if not global.player_preview_active[player.index] then return end
+	if not storage.player_preview_active[player.index] then return end
 	if not player.force.technologies["factory-preview"].researched then return end
 	local cursor_stack = player.cursor_stack
-	if cursor_stack and cursor_stack.valid_for_read and global.saved_factories[cursor_stack.name] then
-		set_camera(player, global.saved_factories[cursor_stack.name], true)
+	if cursor_stack and cursor_stack.valid_for_read and storage.saved_factories[cursor_stack.name] then
+		set_camera(player, storage.saved_factories[cursor_stack.name], true)
 		return
 	end
 	local selected = player.selected
@@ -1090,12 +1103,12 @@ end)
 script.on_event(defines.events.on_gui_click, function(event)
 	local player = game.players[event.player_index]
 	if event.element.valid and event.element.name == "factory_camera_toggle_button" then
-		if global.player_preview_active[player.index] then
+		if storage.player_preview_active[player.index] then
 			get_camera_toggle_button(player).sprite = "technology/factory-architecture-t1"
-			global.player_preview_active[player.index] = false
+			storage.player_preview_active[player.index] = false
 		else
 			get_camera_toggle_button(player).sprite = "technology/factory-preview"
-			global.player_preview_active[player.index] = true
+			storage.player_preview_active[player.index] = true
 		end
 	end
 end)
@@ -1109,7 +1122,7 @@ local function teleport_player_safely(player, surface, position)
 		) or position
 	end
 	player.teleport(position, surface)
-	global.last_player_teleport[player.index] = game.tick
+	storage.last_player_teleport[player.index] = game.tick
 	update_camera(player)
 end
 
@@ -1138,7 +1151,7 @@ end
 local function teleport_players()
 	local tick = game.tick
 	for player_index, player in pairs(game.players) do
-		if player.connected and not player.driving and tick - (global.last_player_teleport[player_index] or 0) >= 45 then
+		if player.connected and not player.driving and tick - (storage.last_player_teleport[player_index] or 0) >= 45 then
 			local walking_state = player.walking_state
 			if walking_state.walking then
 				if walking_state.direction == defines.direction.north
@@ -1213,7 +1226,7 @@ end
 -- ON TICK --
 
 script.on_event(defines.events.on_tick, function(event)
-	local factories = global.factories
+	local factories = storage.factories
 	-- Transfer power
 	local power_batch_size = settings.startup["Factorissimo2-power-batching"].value or 1
 	local i = event.tick%power_batch_size + 1
@@ -1355,7 +1368,7 @@ script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
 			update_hidden_techs(force)
 		end
 	elseif setting == "Factorissimo2-indestructible-buildings" then
-		for _, factory in pairs(global.factories) do
+		for _, factory in pairs(storage.factories) do
 			update_destructible(factory)
 		end
 	end
@@ -1367,7 +1380,7 @@ script.on_event(defines.events.on_force_created, function(event)
 end)
 
 script.on_event(defines.events.on_forces_merging, function(event)
-	for _, factory in pairs(global.factories) do
+	for _, factory in pairs(storage.factories) do
 		if not factory.force.valid then
 			factory.force = game.forces["player"]
 		end
@@ -1378,21 +1391,21 @@ script.on_event(defines.events.on_forces_merging, function(event)
 end)
 
 script.on_event(defines.events.on_research_finished, function(event)
-	if not global.factories then return end -- In case any mod or scenario script calls LuaForce.research_all_technologies() during its on_init
+	if not storage.factories then return end -- In case any mod or scenario script calls LuaForce.research_all_technologies() during its on_init
 	local research = event.research
 	local name = research.name
 	if name == "factory-connection-type-fluid" or name == "factory-connection-type-chest" or name == "factory-connection-type-circuit" then
-		for _, factory in pairs(global.factories) do
+		for _, factory in pairs(storage.factories) do
 			if factory.built then Connections.recheck_factory(factory, nil, nil) end
 		end
 	--elseif name == "factory-interior-upgrade-power" then
-	--	for _, factory in pairs(global.factories) do build_power_upgrade(factory) end
+	--	for _, factory in pairs(storage.factories) do build_power_upgrade(factory) end
 	elseif name == "factory-interior-upgrade-lights" then
-		for _, factory in pairs(global.factories) do build_lights_upgrade(factory) end
+		for _, factory in pairs(storage.factories) do build_lights_upgrade(factory) end
 	elseif name == "factory-interior-upgrade-display" then
-		for _, factory in pairs(global.factories) do build_display_upgrade(factory) end
+		for _, factory in pairs(storage.factories) do build_display_upgrade(factory) end
 	elseif name == "factory-interior-upgrade-roboport" then
-		for _, factory in pairs(global.factories) do build_roboport_upgrade(factory) end
+		for _, factory in pairs(storage.factories) do build_roboport_upgrade(factory) end
 	-- elseif name == "factory-recursion-t1" or name == "factory-recursion-t2" then
 		-- Nothing happens, because implementing stuff here would be horrible.
 		-- You just gotta pick up and replace your invalid factories manually for them to work with the newly researched recursion.

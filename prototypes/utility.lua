@@ -49,12 +49,12 @@ local function factory_pipe(name, height, order)
 			selection_box = {{-0.5, -0.5}, {0.5, 0.5}},
 			fluid_box =
 			{
-				base_area = 25,
+				volume = 100,
 				base_level = height,
 				pipe_covers = pipecoverspictures(),
 				pipe_connections = {
-					{ position = {0, -1} },
-					{ position = {0, 1} },
+					{ flow_direction="input-output", direction=defines.direction.north, position = {0, -0.0625} },
+					{ flow_direction="input-output", direction=defines.direction.north, position = {0, 0.0625} },
 				},
 			},
 			window_bounding_box = {{0,0}, {0,0}},
@@ -122,7 +122,7 @@ data:extend({
 		selection_box = {{-0.5, -0.5}, {0.5, 0.5}},
 		
 		fluid_box = {
-			base_area = 1,
+			volume = 100,
 			pipe_covers = pipecoverspictures(),
 			pipe_connections = {},
 		},

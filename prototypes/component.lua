@@ -129,7 +129,7 @@ local function create_energy_interfaces(size, passive_input, passive_output, ico
 				energy_production = "0MW",
 				selection_box = {{-j,-j},{j,j}},
 				collision_box = {{-j,-j},{j,j}},
-				collision_mask = {},
+				collision_mask = {layers = {}},
 			},
 			{
 				type = "electric-energy-interface",
@@ -153,7 +153,7 @@ local function create_energy_interfaces(size, passive_input, passive_output, ico
 				energy_production = "0MW",
 				selection_box = {{-j,-j},{j,j}},
 				collision_box = {{-j,-j},{j,j}},
-				collision_mask = {},
+				collision_mask = {layers = {}},
 			},
 		})
 	end
@@ -179,9 +179,9 @@ local function create_indicator(ctype, suffix, image)
 			max_health = 500,
 			selection_box = {{-0.4,-0.4},{0.4,0.4}},
 			collision_box = {{-0.4,-0.4},{0.4,0.4}},
-			collision_mask = {},
+			collision_mask = {layers = {}},
 			fluid_box = {
-				base_area = 1,
+				volume = 100,
 				pipe_connections = {},
 			},
 			two_direction_only = false,
@@ -279,7 +279,7 @@ data:extend({
 		max_health = 1,
 		selection_box = {{-j,-j},{j,j}},
 		collision_box = {{-j,-j},{j,j}},
-		collision_mask = {},
+		collision_mask = {layers = {}},
 		maximum_wire_distance = 0,
 		supply_area_distance = 63,
 		pictures = table.deepcopy(data.raw["electric-pole"]["substation"].pictures),
@@ -301,7 +301,7 @@ data:extend({
 		max_health = 55,
 		corpse = "small-remnants",
 		collision_box = {{-0.15, -0.15}, {0.15, 0.15}},
-		collision_mask = {},
+		collision_mask = {layers = {}},
 		selection_box = {{-0.5, -0.5}, {0.5, 0.5}},
 		selectable_in_game = false,
 		vehicle_impact_sound =	{ filename = "__base__/sound/car-metal-impact.ogg", volume = 0.65 },
@@ -311,7 +311,7 @@ data:extend({
 			usage_priority = "secondary-input",
 			render_no_power_icon = false,
 		},
-		energy_usage_per_tick = "5KW",
+		energy_usage_per_tick = "5kW",
 		light = {intensity = 1, size = 50},
 		light_when_colored = {intensity = 1, size = 6},
 		glow_size = 6,
@@ -344,11 +344,11 @@ local function create_dummy_connector(dir, dx, dy, pictures)
 			selection_box = {{-0.4,-0.4},{0.4,0.4}},
 			selectable_in_game = false,
 			collision_box = {{-0.4,-0.4},{0.4,0.4}},
-			collision_mask = {},
+			collision_mask = {layers = {}},
 			fluid_box = {
-				base_area = 1, -- Heresy
+				volume = 100, -- Heresy
 				pipe_connections = {
-					{position = {dx, dy}, type = "output"},
+					{position = {dx, dy}, flow_direction = "input-output", direction = dir},
 				},
 			},
 			horizontal_window_bounding_box = {{0,0},{0,0}},
@@ -361,7 +361,7 @@ end
 
 -- Connectors are named by the direction they are facing,
 -- so that their names can be generated using cpos.direction_in or cpos.direction_out
-create_dummy_connector(defines.direction.south, 0, 1, southpipepictures())
-create_dummy_connector(defines.direction.north, 0, -1, blankpipepictures())
-create_dummy_connector(defines.direction.east, 1, 0, blankpipepictures())
-create_dummy_connector(defines.direction.west, -1, 0, blankpipepictures())
+create_dummy_connector(defines.direction.south, 0, 0.4, southpipepictures())
+create_dummy_connector(defines.direction.north, 0, -0.4, blankpipepictures())
+create_dummy_connector(defines.direction.east, 0.4, 0, blankpipepictures())
+create_dummy_connector(defines.direction.west, -0.4, 0, blankpipepictures())

@@ -18,61 +18,62 @@ local function make_tile(tinfo)
 				side = { picture = F.."/graphics/nothing.png", count = 0 },
 				u_transition = { picture = F.."/graphics/nothing.png", count = 0 },
 				o_transition = { picture = F.."/graphics/nothing.png", count = 0 },
+				empty_transitions = true
 			},
 			walking_speed_modifier = 1.3,
 			walking_sound = {
 				{
-					filename = "__base__/sound/walking/concrete-01.ogg",
+					filename = "__base__/sound/walking/concrete-1.ogg",
 					volume = 1.2
 				},
 				{
-					filename = "__base__/sound/walking/concrete-02.ogg",
+					filename = "__base__/sound/walking/concrete-2.ogg",
 					volume = 1.2
 				},
 				{
-					filename = "__base__/sound/walking/concrete-03.ogg",
+					filename = "__base__/sound/walking/concrete-3.ogg",
 					volume = 1.2
 				},
 				{
-					filename = "__base__/sound/walking/concrete-04.ogg",
+					filename = "__base__/sound/walking/concrete-4.ogg",
 					volume = 1.2
 				}
 			},
 			map_color = tinfo.map_color or {r = 1},
-			pollution_absorption_per_second = 0.0006,
+			absorption_per_second = {["pollution"] = 0.0006},
 		},
 	})
 end
 
 local function wall_mask()
-	return {
-		"ground-tile",
-		"water-tile",
-		"resource-layer",
-		"floor-layer",
-		"item-layer",
-		"object-layer",
-		"player-layer",
-		"doodad-layer"
-	}
+	return {layers = {
+		["ground_tile"] = true,
+		["water_tile"] = true,
+		["resource"] = true,
+		["floor"] = true,
+		["item"] = true,
+		["object"] = true,
+		["player"] = true,
+		["doodad"] = true
+	}}
 end
 
 local function edge_mask()
-	return {
-		"ground-tile",
-		"water-tile",
-		"resource-layer",
-		"floor-layer",
-		"item-layer",
-		"object-layer",
-		"doodad-layer"
-	}
+	return {layers = {
+		["ground_tile"] = true,
+		["water_tile"] = true,
+		["resource"] = true,
+		["floor"] = true,
+		["item"] = true,
+		["object"] = true,
+		["doodad"] = true
+	}}
 end
 
 local function floor_mask()
-	return {
-		"ground-tile"
-	}
+	return {layers = {
+		["ground_tile"] = true
+	}}
 end
 
 local function pictures_out()

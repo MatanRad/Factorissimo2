@@ -10,8 +10,9 @@ data:extend({
 		name = "factory-1",
 		enabled = false,
 		energy_required = 30,
-		ingredients = {{"stone", 50 * multiplier}, {"iron-plate", 50 * multiplier}, {"copper-plate", 10 * multiplier}},
-		result = "factory-1"
+		ingredients = {{type="item", name="stone", amount=50 * multiplier}, {type="item", name="iron-plate", amount=50 * multiplier}, {type="item", name="copper-plate", amount=10 * multiplier}},
+		results = {{type="item", name="factory-1", amount=1}},
+		auto_recycle = false
 	},
 
 	{
@@ -19,8 +20,9 @@ data:extend({
 		name = "factory-2",
 		enabled = false,
 		energy_required = 46,
-		ingredients = {{"stone-brick", 100 * multiplier}, {"steel-plate", 25 * multiplier}, {"big-electric-pole", 5 * multiplier}},
-		result = "factory-2"
+		ingredients = {{type="item", name="stone-brick", amount=100 * multiplier}, {type="item", name="steel-plate", amount=25 * multiplier}, {type="item", name="big-electric-pole", amount=5 * multiplier}},
+		results = {{type="item", name="factory-2", amount=1}},
+		auto_recycle = false
 	},
 
 	{
@@ -28,8 +30,9 @@ data:extend({
 		name = "factory-3",
 		enabled = false,
 		energy_required = 60,
-		ingredients = {{"concrete", 500 * multiplier}, {"steel-plate", 200 * multiplier}, {"substation", 10 * multiplier}},
-		result = "factory-3"
+		ingredients = {{type="item", name="concrete", amount=500 * multiplier}, {type="item", name="steel-plate", amount=200 * multiplier}, {type="item", name="substation", amount=10 * multiplier}},
+		results = {{type="item", name="factory-3", amount=1}},
+		auto_recycle = false
 	},
 
 	-- Utilities
@@ -38,39 +41,44 @@ data:extend({
 		name = "factory-circuit-input",
 		enabled = false,
 		energy_required = 1,
-		ingredients = {{"copper-cable", 5}, {"electronic-circuit", 2}},
-		result = "factory-circuit-input"
+		ingredients = {{type="item", name="copper-cable", amount=5 * multiplier}, {type="item", name="electronic-circuit", amount=2 * multiplier}},
+		results = {{type="item", name="factory-circuit-input", amount=1}},
+		auto_recycle = false
 	},
 	{
 		type = "recipe",
 		name = "factory-circuit-output",
 		enabled = false,
 		energy_required = 1,
-		ingredients = {{"electronic-circuit", 2}, {"copper-cable", 5}},
-		result = "factory-circuit-output"
+		ingredients = {{type="item", name="electronic-circuit", amount=2 * multiplier}, {type="item", name="copper-cable", amount=5 * multiplier}},
+		results = {{type="item", name="factory-circuit-output", amount=1}},
+		auto_recycle = false
 	},
 	{
 		type = "recipe",
 		name = "factory-input-pipe",
 		enabled = false,
 		energy_required = 1,
-		ingredients = {{"pipe", 5}},
-		result = "factory-input-pipe"
+		ingredients = {{type="item", name="pipe", amount=5 * multiplier}},
+		results = {{type="item", name="factory-input-pipe", amount=1}},
+		auto_recycle = false
 	},
 	{
 		type = "recipe",
 		name = "factory-output-pipe",
 		enabled = false,
 		energy_required = 1,
-		ingredients = {{"pipe", 5}},
-		result = "factory-output-pipe"
+		ingredients = {{type="item", name="pipe", amount=5 * multiplier}},
+		results = {{type="item", name="factory-output-pipe", amount=1}},
+		auto_recycle = false
 	},
 	{
 		type = "recipe",
 		name = "factory-requester-chest",
 		enabled = false,
 		energy_required = 10,
-		ingredients = {{"logistic-chest-requester", 5}},
-		result = "factory-requester-chest"
+		ingredients = {{type="item", name="requester-chest", amount=5 * multiplier}},
+		results = {{type="item", name="factory-requester-chest", amount=1}},
+		auto_recycle = false
 	},
 });

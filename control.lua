@@ -348,10 +348,13 @@ local function draw_overlay_sprite(signal, target_entity, offset, scale, id_tabl
 	local sprite_name = sprite_path_translation[signal.type] .. "/" .. signal.name
 	if target_entity.valid then
 		local sprite_data = {
+			orientation = 0.75,
 			sprite = sprite_name,
 			x_scale = scale,
 			y_scale = scale,
 			target = target_entity,
+			orientation_target = target_entity,
+			use_target_orientation = false,
 			surface = target_entity.surface,
 			only_in_alt_mode = true,
 			render_layer = "entity-info-icon",
@@ -360,12 +363,12 @@ local function draw_overlay_sprite(signal, target_entity, offset, scale, id_tabl
 		local shadow_radius = 0.07 * scale
 		for _, shadow_offset in pairs({{0,shadow_radius}, {0, -shadow_radius}, {shadow_radius, 0}, {-shadow_radius, 0}}) do
 			sprite_data.tint = {0, 0, 0, 0.5} -- Transparent black
-			sprite_data.target_offset = {offset[1] + shadow_offset[1], offset[2] + shadow_offset[2]}
+			sprite_data.oriented_offset = {offset[2] + shadow_offset[2], offset[1] + shadow_offset[1]}
 			table.insert(id_table, rendering.draw_sprite(sprite_data))
 		end
 		-- Proper sprite
 		sprite_data.tint = nil
-		sprite_data.target_offset = offset
+		sprite_data.oriented_offset = { offset[2], offset[1] }
 		table.insert(id_table, rendering.draw_sprite(sprite_data))
 	end
 end
@@ -407,7 +410,6 @@ end
 
 function update_overlay(factory)
 	for _, id in pairs(factory.outside_overlay_displays) do
-		-- rendering.destroy(id)
 		id.destroy()
 	end
 	factory.outside_overlay_displays = {}
@@ -686,7 +688,7 @@ local function toggle_port_markers(factory)
 			table.insert(factory.outside_port_markers, rendering.draw_sprite(sprite_data))
 		end
 	else
-		for _, sprite in pairs(factory.outside_port_markers) do rendering.destroy(sprite) end
+		for _, sprite in pairs(factory.outside_port_markers) do sprite.destroy() end
 		factory.outside_port_markers = {}
 	end
 end
@@ -695,11 +697,11 @@ local function cleanup_factory_exterior(factory, building)
 	Connections.disconnect_factory(factory)
 	factory.outside_energy_sender.destroy()
 	factory.outside_energy_receiver.destroy()
-	for _, render_id in pairs(factory.outside_overlay_displays) do rendering.destroy(render_id) end
+	for _, render_id in pairs(factory.outside_overlay_displays) do render_id.destroy() end
 	factory.outside_overlay_displays = {}
 	for _, entity in pairs(factory.outside_fluid_dummy_connectors) do entity.destroy() end
 	factory.outside_fluid_dummy_connectors = {}
-	for _, render_id in pairs(factory.outside_port_markers) do rendering.destroy(render_id) end
+	for _, render_id in pairs(factory.outside_port_markers) do render_id.destroy() end
 	factory.outside_port_markers = {}
 	for _, entity in pairs(factory.outside_other_entities) do entity.destroy() end
 	factory.outside_other_entities = {}

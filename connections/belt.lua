@@ -110,21 +110,19 @@ Belt.tick = function (conn)
 		local f1 = conn.from_line_1
 		local t1 = conn.to_line_1
 		local contents = f1.get_contents()
-		local t = next(contents)
-		if t ~= nil then
-			local c = contents[t]
-			if t1.insert_at(conn.insert_pos, {name = t, count = 1}) then
-				f1.remove_item{name = t, count = 1}
+		local item = contents[1]
+		if item ~= nil then
+			if t1.insert_at(conn.insert_pos, {name = item.name, count = 1, quality=item.quality}) then
+				f1.remove_item{name = item.name, count = 1, quality=item.quality}
 			end
 		end
 		local f2 = conn.from_line_2
 		local t2 = conn.to_line_2
 		contents = f2.get_contents()
-		t = next(contents)
-		if t ~= nil then
-			local c = contents[t]
-			if t2.insert_at(conn.insert_pos, {name = t, count = 1}) then
-				f2.remove_item{name = t, count = 1}
+		item = contents[1]
+		if item ~= nil then
+			if t2.insert_at(conn.insert_pos, {name = item.name, count = 1, quality=item.quality}) then
+				f2.remove_item{name = item.name, count = 1, quality=item.quality}
 			end
 		end
 		conn.offset = (conn.offset % #(conn.delays)) + 1

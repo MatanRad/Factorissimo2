@@ -336,7 +336,7 @@ data:extend({
 local function create_dummy_connector(dir, dx, dy, pictures)
 	data:extend({
 		{
-			type = "pipe",
+			type = "pump",
 			name = "factory-fluid-dummy-connector-" .. dir,
 			flags = {"not-on-map", "hide-alt-info"},
 			minable = nil,
@@ -345,10 +345,13 @@ local function create_dummy_connector(dir, dx, dy, pictures)
 			selectable_in_game = false,
 			collision_box = {{-0.4,-0.4},{0.4,0.4}},
 			collision_mask = {layers = {}},
+			pumping_speed = 0,
+			energy_source = {type="void"},
+			energy_usage = "0W",
 			fluid_box = {
-				volume = 100, -- Heresy
+				volume = 5, -- Heresy
 				pipe_connections = {
-					{position = {dx, dy}, flow_direction = "input-output", direction = dir},
+					{position = {dx, dy}, flow_direction = "output", direction = dir},
 				},
 			},
 			horizontal_window_bounding_box = {{0,0},{0,0}},

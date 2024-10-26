@@ -1,4 +1,17 @@
 ---------------------------------------------------------------------------------------------------
+Version: 3.0.0
+Date: 2024.10.26
+  Updates:
+    - Ported to Factorio 2.0
+    - Added support for item quality
+    - Reworked fluid handling for the new fluids system
+    - This port is still in beta! Please report any issues you encounter.
+
+  Known Issues:
+    - Not all types of pollution (space age ones) are currently supported
+    - Bulk fluid transfer pipes are not working properly. You can overcome this by increasing the update rate of fluids
+
+---------------------------------------------------------------------------------------------------
 Version: 2.5.3
 Date: 2021.10.19
   Bugfixes:

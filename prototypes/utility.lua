@@ -54,7 +54,7 @@ local function factory_pipe(name, height, order)
 				pipe_covers = pipecoverspictures(),
 				pipe_connections = {
 					{ flow_direction="input-output", direction=defines.direction.north, position = {0, -0.0625} },
-					{ flow_direction="input-output", direction=defines.direction.north, position = {0, 0.0625} },
+					{ flow_direction="input-output", direction=defines.direction.south, position = {0, 0.0625} },
 				},
 			},
 			window_bounding_box = {{0,0}, {0,0}},

@@ -259,7 +259,7 @@ function update_all_power_settings()
 	end
 end
 
-local function adjust_power_transfer_rate(factory, positive)
+local function adjust_power_transfer_rate(factory, positive, player)
 	local transfer_rate = factory.transfer_rate
 	if positive then
 		for i = 1,#VALID_POWER_TRANSFER_RATES do
@@ -294,11 +294,11 @@ local function adjust_power_transfer_rate(factory, positive)
 	else
 		transfer_text = "factory-connection-text.power-transfer-decreased"
 	end
-	factory.inside_surface.create_entity{
-		name = "flying-text",
-		position = {x = factory.inside_x + factory.layout.energy_indicator_x, y = factory.inside_y + factory.layout.energy_indicator_y}, color = {r = 228/255, g = 236/255, b = 0},
+	player.create_local_flying_text{
 		text = {transfer_text, power_string},
-		force = factory.force
+		position = {x = factory.inside_x + factory.layout.energy_indicator_x, y = factory.inside_y + factory.layout.energy_indicator_y}, color = {r = 228/255, g = 236/255, b = 0},
+		-- todo: this is from the old 'create_entity' method, not going to deal with this now
+		-- force = factory.force
 	}
 	update_power_settings(factory)
 end
@@ -780,7 +780,7 @@ commands.add_command("give-lost-factory-buildings", {"command-help-message.give-
 end)
 -- FACTORY PLACEMENT AND DESTRUCTION --
 
-local function can_place_factory_here(tier, surface, position)
+local function can_place_factory_here(tier, surface, position, player)
 	local factory = find_surrounding_factory(surface, position)
 	if not factory then return true end
 	local outer_tier = factory.layout.tier
@@ -788,11 +788,11 @@ local function can_place_factory_here(tier, surface, position)
 	if (outer_tier >= tier or settings.global["Factorissimo2-better-recursion-2"].value)
 		and (factory.force.technologies["factory-recursion-t2"].researched or settings.global["Factorissimo2-free-recursion"].value) then return true end
 	if outer_tier > tier then
-		surface.create_entity{name="flying-text", position=position, text={"factory-connection-text.invalid-placement-recursion-1"}, force = factory.force}
+		player.create_local_flying_text{text={"factory-connection-text.invalid-placement-recursion-1"}, position=position} -- todo: add force = factory.force. this is from the old 'create_entity' method, not going to deal with this now
 	elseif (outer_tier >= tier or settings.global["Factorissimo2-better-recursion-2"].value) then
-		surface.create_entity{name="flying-text", position=position, text={"factory-connection-text.invalid-placement-recursion-2"}, force = factory.force}
+		player.create_local_flying_text{text={"factory-connection-text.invalid-placement-recursion-2"}, position=position} -- todo: add force = factory.force. this is from the old 'create_entity' method, not going to deal with this now
 	else
-		surface.create_entity{name="flying-text", position=position, text={"factory-connection-text.invalid-placement"}, force = factory.force}
+		player.create_local_flying_text{text={"factory-connection-text.invalid-placement"}, position=position} -- todo: add force = factory.force. this is from the old 'create_entity' method, not going to deal with this now
 	end
 	return false
 end
@@ -835,7 +835,7 @@ script.on_event({defines.events.on_built_entity, defines.events.on_robot_built_e
 	if HasLayout(entity.name) then
 		-- This is a fresh factory, we need to create it
 		local layout = CreateLayout(entity.name)
-		if can_place_factory_here(layout.tier, entity.surface, entity.position) then
+		if can_place_factory_here(layout.tier, entity.surface, entity.position, game.players[event.player_index]) then
 			local factory = create_factory_interior(layout, entity.force)
 			create_factory_exterior(factory, entity)
 		else
@@ -845,7 +845,7 @@ script.on_event({defines.events.on_built_entity, defines.events.on_robot_built_e
 	elseif storage.saved_factories[entity.name] then
 		-- This is a saved factory, we need to unpack it
 		local factory = storage.saved_factories[entity.name]
-		if can_place_factory_here(factory.layout.tier, entity.surface, entity.position) then
+		if can_place_factory_here(factory.layout.tier, entity.surface, entity.position, game.players[event.player_index]) then
 			storage.saved_factories[entity.name] = nil
 			local newbuilding = entity.surface.create_entity{name=factory.layout.name, position=entity.position, force=factory.force}
 			newbuilding.last_user = entity.last_user
@@ -853,7 +853,7 @@ script.on_event({defines.events.on_built_entity, defines.events.on_robot_built_e
 			entity.destroy()
 		end
 	elseif is_invalid_save_slot(entity.name) then
-		entity.surface.create_entity{name="flying-text", position=entity.position, text={"factory-connection-text.invalid-factory-data"}}
+		game.players[event.player_index].create_local_flying_text{text={"factory-connection-text.invalid-factory-data"}, position=entity.position}
 		entity.destroy()
 	else
 		if Connections.is_connectable(entity) then
@@ -929,7 +929,7 @@ script.on_event(defines.events.on_cancelled_deconstruction, function(event)
 	if storage.saved_factories[entity.name] then
 		-- Rebuild factory from save
 		local factory = storage.saved_factories[entity.name]
-		if can_place_factory_here(factory.layout.tier, entity.surface, entity.position) then
+		if can_place_factory_here(factory.layout.tier, entity.surface, entity.position, game.players[event.player_index]) then
 			storage.saved_factories[entity.name] = nil
 			local newbuilding = entity.surface.create_entity{name=factory.layout.name, position=entity.position, force=factory.force}
 			create_factory_exterior(factory, newbuilding)
@@ -1303,16 +1303,16 @@ script.on_event("factory-rotate", function(event)
 		if factory then
 			if factory.energy_indicator and factory.energy_indicator.valid and factory.energy_indicator.unit_number == entity.unit_number then
 				factory.transfers_outside = not factory.transfers_outside
-				factory.inside_surface.create_entity{
-					name = "flying-text",
-					position = entity.position,
-					color = {r = 228/255, g = 236/255, b = 0},
-					text = (factory.transfers_outside and {"factory-connection-text.output-mode"}) or {"factory-connection-text.input-mode"},
-					force = factory.force
+				game.players[event.player_index].create_local_flying_text{
+					text=(factory.transfers_outside and {"factory-connection-text.output-mode"}) or {"factory-connection-text.input-mode"}, 
+					position=entity.position, 
+					color={r = 228/255, g = 236/255, b = 0},
+					-- todo: this is from the old 'create_entity' method, not going to deal with this now
+					-- force = factory.force
 				}
 				update_power_settings(factory)
 			else
-				Connections.rotate(factory, entity)
+				Connections.rotate(factory, entity, game.players[event.player_index])
 			end
 		end
 	elseif entity.name == "factory-requester-chest" then
@@ -1327,9 +1327,9 @@ script.on_event("factory-increase", function(event)
 		local factory = find_surrounding_factory(entity.surface, entity.position)
 		if factory then
 			if factory.energy_indicator and factory.energy_indicator.valid and factory.energy_indicator.unit_number == entity.unit_number then
-				adjust_power_transfer_rate(factory, true)
+				adjust_power_transfer_rate(factory, true, game.players[event.player_index])
 			else
-				Connections.adjust(factory, entity, true)
+				Connections.adjust(factory, entity, true, game.players[event.player_index])
 			end
 		end
 	end
@@ -1342,9 +1342,9 @@ script.on_event("factory-decrease", function(event)
 		local factory = find_surrounding_factory(entity.surface, entity.position)
 		if factory then
 			if factory.energy_indicator and factory.energy_indicator.valid and factory.energy_indicator.unit_number == entity.unit_number then
-				adjust_power_transfer_rate(factory, false)
+				adjust_power_transfer_rate(factory, false, game.players[event.player_index])
 			else
-				Connections.adjust(factory, entity, false)
+				Connections.adjust(factory, entity, false, game.players[event.player_index])
 			end
 		end
 	end

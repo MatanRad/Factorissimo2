@@ -229,13 +229,13 @@ local function update()
 end
 Connections.update = update
 
-local function rotate(factory, indicator)
+local function rotate(factory, indicator, player)
 	for cid, ind2 in pairs(factory.connection_indicators) do
 		if ind2 and ind2.valid then
 			if (ind2.unit_number == indicator.unit_number) then
 				local conn = factory.connections[cid]
 				local text = c_rotate[conn._type](conn)
-				factory.inside_surface.create_entity{name="flying-text", position=indicator.position, color=c_color[conn._type], text=text}
+				player.create_local_flying_text{text=text, position=indicator.position, color=c_color[conn._type]}
 				local setting, dir = c_direction[conn._type](conn)
 				set_connection_indicator(factory, cid, conn._type, setting, dir)
 				return
@@ -245,13 +245,13 @@ local function rotate(factory, indicator)
 end
 Connections.rotate = rotate
 
-local function adjust(factory, indicator, positive)
+local function adjust(factory, indicator, positive, player)
 	for cid, ind2 in pairs(factory.connection_indicators) do
 		if ind2 and ind2.valid then
 			if (ind2.unit_number == indicator.unit_number) then
 				local conn = factory.connections[cid]
 				local text = c_adjust[conn._type](conn, positive)
-				factory.inside_surface.create_entity{name="flying-text", position=indicator.position, color=c_color[conn._type], text=text}
+				player.create_local_flying_text{text=text, position=indicator.position, color=c_color[conn._type]}
 				local setting, dir = c_direction[conn._type](conn)
 				set_connection_indicator(factory, cid, conn._type, setting, dir)
 				return

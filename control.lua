@@ -676,10 +676,9 @@ local function toggle_port_markers(factory)
 	if not factory.built then return end
 	if #(factory.outside_port_markers) == 0 then
 		for id, cpos in pairs(factory.layout.connections) do
-			local dir = cpos.direction_out / 16.0
 			local sprite_data = {
 				sprite = "utility/indication_arrow",
-				orientation = dir,
+				orientation = cpos.direction_out / 16.0,
 				target = factory.building,
 				orientation_target = factory.building,
 				use_target_orientation = false,

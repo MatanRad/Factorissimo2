@@ -676,12 +676,15 @@ local function toggle_port_markers(factory)
 	if not factory.built then return end
 	if #(factory.outside_port_markers) == 0 then
 		for id, cpos in pairs(factory.layout.connections) do
+			local dir = cpos.direction_out / 16.0
 			local sprite_data = {
 				sprite = "utility/indication_arrow",
-				orientation = cpos.direction_out/8,
+				orientation = dir,
 				target = factory.building,
+				orientation_target = factory.building,
+				use_target_orientation = false,
 				surface = factory.building.surface,
-				target_offset = {cpos.outside_x - 0.5 * cpos.indicator_dx, cpos.outside_y - 0.5 * cpos.indicator_dy},
+				oriented_offset = {cpos.outside_x - 0.5 * cpos.indicator_dx, cpos.outside_y - 0.5 * cpos.indicator_dy},
 				only_in_alt_mode = true,
 				render_layer = "entity-info-icon",
 			}
@@ -1273,7 +1276,7 @@ for _,rate in pairs(VALID_POWER_TRANSFER_RATES) do
 end
 
 script.on_event(defines.events.on_player_rotated_entity, function(event)
-	--game.print("Rotated!")
+	-- game.print("Rotated!")
 	local entity = event.entity
 	if CONNECTION_INDICATOR_NAMES[entity.name] then
 		-- Skip
